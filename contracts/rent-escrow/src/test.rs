@@ -1,21 +1,20 @@
 #![cfg(test)]
 
-use crate::testutils::setup_test_env;
-use soroban_sdk::symbol_short;
+use super::*;
+use soroban_sdk::{testutils::Address as _, Env};
 
 #[test]
-fn test_hello() {
-    let (_env, _user, client) = setup_test_env();
+fn test_initialize() {
+    let env = Env::default();
+    let contract_id = env.register_contract(None, RentEscrow);
+    let client = RentEscrowClient::new(&env, &contract_id);
 
-    let words = client.hello(&symbol_short!("Dev"));
-    assert_eq!(words, symbol_short!("Hello"));
-}
+    let landlord = Address::generate(&env);
+    let total_amount = 1000;
+    let mut roommate_shares = Map::new(&env);
+    roommate_shares.set(Address::generate(&env), 500);
+    roommate_shares.set(Address::generate(&env), 500);
+    let deadline = 1000;
 
-#[test]
-fn test_mock_environment() {
-    let (env, user, _client) = setup_test_env();
-    
-    // Verify user address generation and environment state
-    assert!(user.to_string().len() > 0);
-    assert_eq!(env.ledger().sequence(), 0);
+    client.initialize(&landlord, &total_amount, &roommate_shares, &deadline);
 }
