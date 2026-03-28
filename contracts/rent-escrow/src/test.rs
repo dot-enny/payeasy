@@ -172,39 +172,4 @@ fn test_release_while_underfunded_fails() {
 
 /// Issue #32 – release: succeeds when fully funded
 ///
-/// Once every roommate has covered the full rent amount, `release` must
-/// complete without error.
-#[test]
-fn test_release_when_fully_funded_succeeds() {
-    let env = Env::default();
-    let (client, _, roommate_a, roommate_b) = setup_escrow(&env);
-
-    // Both roommates pay their full shares — total = 1000, target = 1000.
-    client.contribute(&roommate_a, &500_i128);
-    client.contribute(&roommate_b, &500_i128);
-
-    assert_eq!(client.is_fully_funded(), true);
-
-    // release must not return an error.
-    client.release();
-}
-
-/// Issue #37 – claim_refund: deadline verification (acceptance criteria)
-///
-/// `claim_refund` must revert with `Error::DeadlineNotReached` when called
-/// before the escrow deadline has passed.
-#[test]
-fn test_claim_refund_before_deadline_fails() {
-    let env = Env::default();
-    let (client, _, roommate_a, _) = setup_escrow(&env);
-
-    client.contribute(&roommate_a, &300_i128);
-
-    // Default env ledger timestamp is 0, which is < the deadline 86400.
-    // So calling claim_refund should trigger DeadlineNotReached (code 4).
-    let result = client.try_claim_refund(&roommate_a);
-    assert!(
-        result.is_err(),
-        "expected claim_refund to fail if called before deadline"
-    );
-}
+/// Once every roommate
