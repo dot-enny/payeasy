@@ -101,3 +101,5 @@ export function useStellar() {
   }
   return context;
 }
+
+export const useStellarAuth = useStellar;
