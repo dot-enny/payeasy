@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createEscrow } from "@/lib/mock/escrow";
 
 import { getExplorerLink, type ExplorerProvider } from "@/lib/stellar/explorer";
 
@@ -113,6 +115,7 @@ export default function CreateEscrowForm({
   contractClient,
   explorer = DEFAULT_EXPLORER,
 }: CreateEscrowFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<EscrowFormDraft>({
     totalRent: "",
@@ -206,39 +209,17 @@ export default function CreateEscrowForm({
       setIsSubmitting(true);
       setErrors([]);
 
-      const initializeResult = await activeClient.initialize({
-        totalRent: draft.totalRent,
-        tokenId: draft.tokenId.trim(),
-        deadlineLedgerTimestamp,
-      });
+      // Call the mock service
+      const { contractId } = await createEscrow();
 
-      let lastMetadata = metadataFromResult(initializeResult);
-
-      for (const roommate of draft.roommates) {
-        const addRoommateResult = await addRoommateMethod({
-          roommateAddress: roommate.address.trim(),
-          shareAmount: roommate.shareAmount,
-        });
-
-        const roommateMetadata = metadataFromResult(addRoommateResult);
-        lastMetadata = {
-          ...lastMetadata,
-          ...roommateMetadata,
-        };
-      }
-
-      setSubmission({
-        transactionHash: lastMetadata.transactionHash,
-        contractId: lastMetadata.contractId,
-      });
-      setStep(4);
+      // Redirect to success page
+      router.push(`/escrow/success?id=${contractId}`);
     } catch (error) {
       setErrors([
         error instanceof Error
           ? error.message
           : "Escrow creation failed. Please try again.",
       ]);
-    } finally {
       setIsSubmitting(false);
     }
   }
